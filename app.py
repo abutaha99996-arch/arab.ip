@@ -222,5 +222,15 @@ def delete_logs():
         return jsonify({'status': 'error', 'message': str(e)})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # حاول استخدام بورت 8080 أولاً، وإذا كان مشغولاً جرب 3000
+    for port in [8080, 3000, 5001, 8000]:
+        try:
+            print(f"🔄 جرب تشغيل السيرفر على البورت {port}...")
+            app.run(host='0.0.0.0', port=port, debug=False)
+            break
+        except OSError as e:
+            if "Address already in use" in str(e):
+                print(f"❌ البورت {port} مشغول، جرب البورت التالي...")
+                continue
+            else:
+                raise e
